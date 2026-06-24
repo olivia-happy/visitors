@@ -11,6 +11,55 @@ export type ReservationHint = {
   evidence_excerpt: string;
 };
 
+export type TimelineItem = {
+  day_index: number;
+  start_time: string;
+  end_time: string;
+  title: string;
+  transport_mode: string;
+  transport_duration_minutes: number;
+  notes: string;
+  reservation_hint: ReservationHint | null;
+};
+
+export type MapPoint = {
+  name: string;
+  lat: number;
+  lng: number;
+  day_index: number;
+  sequence_no: number;
+};
+
+export type BudgetItem = {
+  category: string;
+  amount_low: number;
+  amount_high: number;
+  is_adjustable: boolean;
+};
+
+export type ChecklistItem = {
+  category: string;
+  item_name: string;
+  reason: string;
+};
+
+export type GraphNode = {
+  id: string;
+  label: string;
+  type: string;
+};
+
+export type GraphEdge = {
+  source: string;
+  target: string;
+  label: string | null;
+};
+
+export type PlanGraph = {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+};
+
 export type PlanInput = {
   city: string;
   days: number;
@@ -28,7 +77,12 @@ export type PlanInput = {
 export type PlanDraft = PlanInput & {
   id: string;
   status: string;
+  summary: string;
+  timeline: TimelineItem[];
+  map_points: MapPoint[];
+  budget_items: BudgetItem[];
+  checklist_items: ChecklistItem[];
+  graph: PlanGraph;
   created_at: string;
   reservation_hints: ReservationHint[];
 };
-
