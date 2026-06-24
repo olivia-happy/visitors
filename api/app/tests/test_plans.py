@@ -30,6 +30,18 @@ def test_create_plan_returns_plan_id_and_reservation_hints() -> None:
     assert body["reservation_hints"][0]["poi_name"] == "苏州博物馆"
     assert body["reservation_hints"][0]["reservation_channel"] == "公众号"
     assert body["reservation_hints"][0]["price_note"] == "free"
+    assert body["timeline"]
+    assert body["map_points"]
+    assert body["budget_items"]
+    assert body["checklist_items"]
+    assert body["graph"]["nodes"]
+    assert body["graph"]["edges"]
+
+    museum_stop = next(
+        item for item in body["timeline"] if item["title"] == "苏州博物馆"
+    )
+    assert museum_stop["reservation_hint"]["poi_name"] == "苏州博物馆"
+    assert museum_stop["reservation_hint"]["reservation_channel"] == "公众号"
 
 
 def test_get_created_plan_returns_structured_payload() -> None:
@@ -60,4 +72,8 @@ def test_get_created_plan_returns_structured_payload() -> None:
     assert body["id"] == plan_id
     assert body["output_language"] == "en"
     assert body["reservation_hints"][0]["poi_name"] == "陕西历史博物馆"
+    assert body["summary"]
+    assert body["graph"]["nodes"][0]["type"] == "city"
+    assert any(item["category"] == "tickets" for item in body["budget_items"])
+    assert any(item["item_name"] == "ID card" for item in body["checklist_items"])
 

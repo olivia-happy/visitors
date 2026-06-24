@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from app.schemas.plan import PlanCreateRequest, PlanRecord, ReservationHint
+from app.services.planner import GeneratedPlanOutput
 
 
 class InMemoryPlanStore:
@@ -9,7 +10,10 @@ class InMemoryPlanStore:
         self._plans: dict[str, PlanRecord] = {}
 
     def create(
-        self, payload: PlanCreateRequest, reservation_hints: list[ReservationHint]
+        self,
+        payload: PlanCreateRequest,
+        reservation_hints: list[ReservationHint],
+        generated: GeneratedPlanOutput,
     ) -> PlanRecord:
         plan = PlanRecord(
             id=str(uuid4()),
@@ -24,6 +28,12 @@ class InMemoryPlanStore:
             xiaohongshu_link=payload.xiaohongshu_link,
             xiaohongshu_notes=payload.xiaohongshu_notes,
             output_language=payload.output_language,
+            summary=generated.summary,
+            timeline=generated.timeline,
+            map_points=generated.map_points,
+            budget_items=generated.budget_items,
+            checklist_items=generated.checklist_items,
+            graph=generated.graph,
             reservation_hints=reservation_hints,
             created_at=datetime.now(timezone.utc),
         )
@@ -35,4 +45,3 @@ class InMemoryPlanStore:
 
 
 plan_store = InMemoryPlanStore()
-

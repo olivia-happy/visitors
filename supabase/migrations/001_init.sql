@@ -47,3 +47,40 @@ create table if not exists public.plan_checklist_items (
   reason text null
 );
 
+create table if not exists public.plan_itineraries (
+  id uuid primary key,
+  plan_id uuid not null references public.plans(id) on delete cascade,
+  day_index integer not null,
+  start_time text not null,
+  end_time text not null,
+  title text not null,
+  transport_mode text not null,
+  transport_duration_minutes integer not null,
+  notes text not null
+);
+
+create table if not exists public.plan_map_points (
+  id uuid primary key,
+  plan_id uuid not null references public.plans(id) on delete cascade,
+  name text not null,
+  lat numeric(10,6) not null,
+  lng numeric(10,6) not null,
+  day_index integer not null,
+  sequence_no integer not null
+);
+
+create table if not exists public.plan_graph_nodes (
+  id uuid primary key,
+  plan_id uuid not null references public.plans(id) on delete cascade,
+  node_key text not null,
+  label text not null,
+  node_type text not null
+);
+
+create table if not exists public.plan_graph_edges (
+  id uuid primary key,
+  plan_id uuid not null references public.plans(id) on delete cascade,
+  source_key text not null,
+  target_key text not null,
+  label text null
+);
