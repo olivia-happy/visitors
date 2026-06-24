@@ -6,6 +6,8 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+!api/.env.example
+!web/.env.example
 
 # Node / Next.js
 web/node_modules/
@@ -30,4 +32,3 @@ api/**/*.pyc
 
 # Local reference clones
 reference/
-
