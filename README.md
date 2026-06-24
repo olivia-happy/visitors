@@ -4,10 +4,14 @@ AI travel planner for China-first city trips.
 
 Visitors helps users who do not have time to research a trip generate a detailed, executable travel plan with:
 
+- dual mobile entry for quick start and Xiaohongshu-evidence-first intake
+- three-step wizard intake tuned for mobile screens
 - hour-level itinerary
 - interactive city planning map
 - reservation reminders
+- execution-first result screen with reservation risks and route summary
 - precise budget breakdown
+- self-drive parking guides and hotel area suggestions
 - packing and weather checklist
 - Xiaohongshu link parsing
 - bilingual output in Chinese and English
@@ -36,19 +40,24 @@ Visitors turns those scattered inputs into one structured travel result page.
 
 ## Core Features
 
-### 1. Structured Trip Intake
+### 1. Dual-Entry Mobile Intake
 
 Users can input:
 
-- destination city
-- travel days
-- budget range
-- transport preference
-- accommodation style
-- travel pace
-- interests
+- destination city, travel days, and budget range
+- transport preference and self-drive parking sort
+- accommodation style, travel mode, and preference tags
 - special requirements
-- Xiaohongshu link
+- Xiaohongshu link and evidence notes
+
+The intake flow now supports:
+
+- `quick` entry for users who want to sketch the route first
+- `xiaohongshu` entry for users who want to pin reservation evidence first
+- a fixed three-step mobile wizard:
+  - Basics
+  - Style
+  - Evidence
 
 ### 2. Hour-Level Itinerary
 
@@ -60,7 +69,17 @@ The system generates a detailed day-by-day plan with:
 - meal suggestions
 - alternative plan hints
 
-### 3. City Planning Map
+### 3. Execution-First Result Screen
+
+The result page now starts with:
+
+- execution summary
+- reservation risk panel
+- execution route preview
+
+These appear before the map, full timeline, budget panel, checklist, and graph view.
+
+### 4. City Planning Map
 
 The result includes a scaled city travel map based on real location data:
 
@@ -70,7 +89,7 @@ The result includes a scaled city travel map based on real location data:
 - transport links
 - relative distance awareness
 
-### 4. Reservation Reminder on Itinerary Cards
+### 5. Reservation Reminder on Itinerary Cards
 
 Each itinerary card can show reservation-related metadata when available:
 
@@ -86,7 +105,17 @@ V1 rule:
 - examples include cases like Suzhou Museum being free but still requiring early reservation
 - final UI must remind users to verify official channels
 
-### 5. Precise Budget Breakdown Panel
+### 6. Self-Drive Parking and Hotel Area Suggestions
+
+When the plan is self-drive oriented and `parking_required = true`, Visitors can surface:
+
+- parking guides ranked by distance or parking price
+- walking-time expectations from the recommended lot
+- area-level hotel suggestions tuned for self-drive convenience
+
+When the plan is not self-drive oriented, parking panels stay hidden.
+
+### 7. Precise Budget Breakdown Panel
 
 Visitors includes a multi-dimensional budget panel with:
 
@@ -97,7 +126,7 @@ Visitors includes a multi-dimensional budget panel with:
 - local transport
 - optional shopping / flexible budget
 
-### 6. Packing and Preparation Checklist
+### 8. Packing and Preparation Checklist
 
 The checklist is generated from city, season, weather, and trip style, including:
 
@@ -106,7 +135,7 @@ The checklist is generated from city, season, weather, and trip style, including
 - power bank / chargers / camera gear
 - makeup / toiletries / medication
 
-### 7. Chinese and English Output
+### 9. Chinese and English Output
 
 The product is designed to support:
 
@@ -114,7 +143,7 @@ The product is designed to support:
 - English UI and output
 - bilingual itinerary content in future expanded versions
 
-### 8. Multi-Agent Planning
+### 10. Multi-Agent Planning
 
 The planning pipeline is designed around specialized agents, such as:
 
@@ -126,7 +155,7 @@ The planning pipeline is designed around specialized agents, such as:
 - reservation hint agent
 - review agent
 
-### 9. Itinerary Graph View
+### 11. Itinerary Graph View
 
 Generated itinerary data can be converted into a node relationship graph to visualize:
 
@@ -177,11 +206,14 @@ flowchart LR
 
 The V1 result page is expected to include:
 
-- trip summary
+- execution summary
+- reservation risk panel
+- execution route preview
 - city planning map
 - day-by-day hour-level timeline
 - itinerary cards
 - reservation reminder area
+- parking guide panel
 - hotel area recommendation
 - budget breakdown panel
 - weather and outfit hints
@@ -203,6 +235,18 @@ visitors/
   README.md
   PRD.md
 ```
+
+## Local Visual Preview
+
+If you want to inspect the frontend visually instead of only reading TSX in VSCode:
+
+1. Run `npm run dev` inside `web/`
+2. Open `http://localhost:3000/` to verify the dual-entry homepage
+3. Open `http://localhost:3000/plan/new?entry=quick` to review the quick-entry wizard
+4. Open `http://localhost:3000/plan/new?entry=xiaohongshu` to review the evidence-first wizard
+5. Open `http://localhost:3000/showcase` to review the execution-first result layout
+6. Use `showcase` as the stable preview for reservation risks, execution route, parking panels, timeline, budget panel, checklist, and graph sections
+7. Add `NEXT_PUBLIC_AMAP_JS_KEY` in `web/.env.local` if you want the real AMap route instead of the fallback panel
 
 ## Roadmap
 
@@ -234,9 +278,10 @@ visitors/
 
 Current status:
 
-- product definition in progress
-- architecture being prepared
-- initial implementation not started yet
+- product scope and PRD are defined
+- Next.js frontend scaffold is running with a showcase result page
+- FastAPI planner API scaffold is connected to the intake flow
+- Supabase schema drafts are prepared for the next persistence step
 
 Open source goals:
 
@@ -249,4 +294,3 @@ Open source goals:
 - Reservation reminders in V1 are evidence-based, not official truth.
 - Users should always verify official reservation channels, prices, and policies.
 - China map and itinerary quality are more important than generic global travel support.
-

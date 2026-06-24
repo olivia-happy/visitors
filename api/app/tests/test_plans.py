@@ -44,6 +44,47 @@ def test_create_plan_returns_plan_id_and_reservation_hints() -> None:
     assert museum_stop["reservation_hint"]["reservation_channel"] == "公众号"
 
 
+def test_create_plan_accepts_mobile_dual_entry_fields() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/plans",
+        json={
+            "city": "Suzhou",
+            "days": 2,
+            "transport_preferences": ["drive"],
+            "entry_mode": "quick",
+            "travel_mode": "photo",
+            "preference_tags": ["food", "photo_ready"],
+            "parking_required": True,
+            "parking_sort": "distance",
+            "max_walk_from_parking_minutes": 30,
+            "output_language": "zh-CN",
+        },
+    )
+
+    assert response.status_code == 201
+
+
+def test_create_plan_rejects_invalid_parking_sort() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/plans",
+        json={
+            "city": "Suzhou",
+            "days": 2,
+            "entry_mode": "quick",
+            "travel_mode": "photo",
+            "parking_required": True,
+            "parking_sort": "random",
+            "output_language": "zh-CN",
+        },
+    )
+
+    assert response.status_code == 422
+
+
 def test_get_created_plan_returns_structured_payload() -> None:
     client = TestClient(app)
 
@@ -76,4 +117,3 @@ def test_get_created_plan_returns_structured_payload() -> None:
     assert body["graph"]["nodes"][0]["type"] == "city"
     assert any(item["category"] == "tickets" for item in body["budget_items"])
     assert any(item["item_name"] == "ID card" for item in body["checklist_items"])
-

@@ -13,6 +13,18 @@ export async function createPlan(input: PlanInput): Promise<PlanDraft> {
   });
 
   if (!response.ok) {
+    const errorBody = (await response.json().catch(() => null)) as
+      | { detail?: string | { msg?: string }[] }
+      | null;
+
+    if (typeof errorBody?.detail === "string") {
+      throw new Error(errorBody.detail);
+    }
+
+    if (Array.isArray(errorBody?.detail) && errorBody.detail[0]?.msg) {
+      throw new Error(errorBody.detail[0].msg);
+    }
+
     throw new Error("Failed to create plan.");
   }
 
