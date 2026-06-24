@@ -1,3 +1,5 @@
+import { fetchPlan } from "@/lib/api";
+
 type PlanPageProps = {
   params: Promise<{
     planId: string;
@@ -27,6 +29,8 @@ const timeline = [
 
 export default async function PlanDetailPage({ params }: PlanPageProps) {
   const { planId } = await params;
+  const plan = await fetchPlan(planId);
+  const reservationHints = plan?.reservation_hints ?? [];
 
   return (
     <main className="min-h-screen bg-[#f4efe4] px-6 py-10 text-foreground">
@@ -37,12 +41,12 @@ export default async function PlanDetailPage({ params }: PlanPageProps) {
               Plan Result
             </p>
             <h1 className="mt-3 text-3xl font-semibold sm:text-5xl">
-              Demo plan shell for {planId}
+              {plan ? `${plan.city} · ${plan.days} day plan` : `Demo plan shell for ${planId}`}
             </h1>
             <p className="mt-3 max-w-3xl text-base leading-8 text-muted">
-              This result page is the initial container for map, itinerary,
-              reservation hints, and budget panels. Real data will be loaded
-              from FastAPI after the first API integration step.
+              {plan
+                ? `Output language: ${plan.output_language}. Reservation hints, budget panels, and graph data will build from this structured draft.`
+                : "This result page is the initial container for map, itinerary, reservation hints, and budget panels."}
             </p>
           </div>
 
@@ -64,7 +68,7 @@ export default async function PlanDetailPage({ params }: PlanPageProps) {
               <span className="text-sm text-muted">Day 1 demo shell</span>
             </div>
             <div className="mt-5 grid gap-4">
-              {timeline.map((item) => (
+              {(plan ? timeline.slice(0, Math.min(plan.days, timeline.length)) : timeline).map((item) => (
                 <article
                   key={item.time}
                   className="rounded-[1.5rem] border border-line/80 bg-[#fffdf7] p-5"
@@ -97,10 +101,49 @@ export default async function PlanDetailPage({ params }: PlanPageProps) {
             title="Budget Panel"
             body="Tickets, food, stay, and transport ranges will be aggregated here."
           />
-          <Panel
-            title="Reservation Hints"
-            body="Evidence-based reservation notes from Xiaohongshu will appear here, including channel and price when available."
-          />
+          <section className="rounded-[2rem] border border-line bg-card p-5">
+            <h2 className="text-lg font-semibold">Reservation Hints</h2>
+            <p className="mt-3 text-sm leading-7 text-muted">
+              Evidence-based reservation notes from Xiaohongshu appear here,
+              including channel and price when available.
+            </p>
+            <div className="mt-4 grid gap-3">
+              {reservationHints.length ? (
+                reservationHints.map((hint) => (
+                  <article
+                    key={`${hint.poi_name}-${hint.evidence_excerpt}`}
+                    className="rounded-[1.5rem] border border-line/70 bg-[#fffdf7] p-4"
+                  >
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {hint.poi_name}
+                    </h3>
+                    <p className="mt-2 text-sm leading-7 text-muted">
+                      {hint.reminder_text}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      {hint.reservation_channel ? (
+                        <span className="rounded-full bg-accent-soft px-3 py-1 text-accent">
+                          Channel: {hint.reservation_channel}
+                        </span>
+                      ) : null}
+                      {hint.price_note ? (
+                        <span className="rounded-full bg-[#efe7d4] px-3 py-1 text-foreground">
+                          Price: {hint.price_note}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-3 text-xs leading-6 text-muted">
+                      Evidence: {hint.evidence_excerpt}
+                    </p>
+                  </article>
+                ))
+              ) : (
+                <p className="text-sm leading-7 text-muted">
+                  No explicit reservation evidence extracted yet.
+                </p>
+              )}
+            </div>
+          </section>
           <Panel
             title="Checklist"
             body="Packing, weather, IDs, and preparation reminders will be rendered here."
@@ -128,4 +171,3 @@ function Panel({ title, body }: PanelProps) {
     </section>
   );
 }
-
