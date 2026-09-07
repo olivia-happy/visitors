@@ -1,296 +1,343 @@
 # Visitors
 
-AI travel planner for China-first city trips.
+China-first AI travel planner for executable city trips.
+面向中国境内城市旅行的执行型智能行程规划器。
 
-Visitors helps users who do not have time to research a trip generate a detailed, executable travel plan with:
+[中文](#中文) | [English](#english)
 
-- dual mobile entry for quick start and Xiaohongshu-evidence-first intake
-- three-step wizard intake tuned for mobile screens
-- hour-level itinerary
-- interactive city planning map
-- reservation reminders
-- execution-first result screen with reservation risks and route summary
-- precise budget breakdown
-- self-drive parking guides and hotel area suggestions
-- packing and weather checklist
-- Xiaohongshu link parsing
-- bilingual output in Chinese and English
-- multi-agent planning workflow
-- graph view of itinerary relationships
+`Visitors` is built for weekend and holiday trips in China. It turns scattered travel notes, reservation hints, map distance, weather, budget, parking, and hotel-area decisions into one result page that a traveler can actually follow.
 
----
+The product is intentionally narrow and deep: it does not try to be a generic travel chatbot. It focuses on reservation reliability, executable routing, and controllable itinerary editing.
 
-## What It Solves
+## Product Preview
 
-Travel information is scattered across Xiaohongshu, maps, weather apps, ticketing pages, hotel platforms, and random note-taking tools. For users who want to be well-prepared but do not want to spend hours building an itinerary by hand, this creates three problems:
+Screenshots below are captured from the current local production preview.
 
-- too much fragmented information
-- no clear hour-by-hour executable plan
-- easy to miss ticketing, reservation, weather, and packing details
+<p align="center">
+  <img src="docs/assets/readme/showcase-desktop.png" alt="Visitors desktop result page" width="100%" />
+</p>
 
-Visitors turns those scattered inputs into one structured travel result page.
+<p align="center">
+  <img src="docs/assets/readme/home-mobile.png" alt="Visitors mobile homepage" width="31%" />
+  <img src="docs/assets/readme/wizard-mobile.png" alt="Visitors mobile planning wizard" width="31%" />
+  <img src="docs/assets/readme/showcase-mobile.png" alt="Visitors mobile result page" width="31%" />
+</p>
 
-## Target Users
+## 中文
 
-- users planning a domestic China city trip
-- people who want to be fully prepared before traveling
-- users who care about budget, transport, and timing
-- users who want photo-friendly spots, vlog-friendly routes, or quiet/nature-focused plans
-- couples, friends, and future co-planning travel buddies
+### 项目定位
 
-## Core Features
+`Visitors` 是一个面向作品集展示和开源发布的国内旅行智能规划项目。它解决的不是“推荐几个景点”，而是把用户出发前真正会纠结的信息整理成可执行方案：
 
-### 1. Dual-Entry Mobile Intake
+- 哪些景点需要提前预约
+- 预约渠道、价格和证据是什么
+- 每天按什么顺序走更顺
+- 门票、餐饮、住宿、交通大概花多少钱
+- 自驾是否好停车，停车场怎么选
+- 天气、证件、穿搭和行前准备是否遗漏
+- 生成后能不能继续调整，而不是只能接受一次性答案
 
-Users can input:
+苏州只是录屏和讲解样例，不是产品边界。真实使用时，用户可以输入任意国内城市，再根据天数、预算、交通方式、兴趣偏好和小红书证据生成方案。
 
-- destination city, travel days, and budget range
-- transport preference and self-drive parking sort
-- accommodation style, travel mode, and preference tags
-- special requirements
-- Xiaohongshu link and evidence notes
+### 核心差异化
 
-The intake flow now supports:
+#### 1. 预约可靠性优先
 
-- `quick` entry for users who want to sketch the route first
-- `xiaohongshu` entry for users who want to pin reservation evidence first
-- a fixed three-step mobile wizard:
-  - Basics
-  - Style
-  - Evidence
+很多旅行生成器会写一句“建议提前预约”，但不会说明具体是哪个景点、去哪里预约、价格如何、证据来自哪里。`Visitors` 把预约提醒做成结构化信息，并在输入阶段提前预览，避免结果页看起来很完整但真正出发时才发现关键景点约不上。
 
-### 2. Hour-Level Itinerary
+#### 2. 可执行路线优先
 
-The system generates a detailed day-by-day plan with:
+结果页不是一段长攻略，而是面向行动的出行指挥板：小时级时间轴、路线摘要、地图点位、交通时长、预算明细、停车建议、酒店片区和行前清单会放在同一个上下文里。
 
-- start and end time for each stop
-- transit method and estimated duration
-- attraction notes
-- meal suggestions
-- alternative plan hints
+#### 3. 可控的智能规划
 
-### 3. Execution-First Result Screen
+生成方案后，用户可以锁定必去点、移除不想去的点，并重新优化剩余路线。这个交互让产品从“智能给一个答案”变成“用户带着约束继续调方案”，更接近真实旅行决策。
 
-The result page now starts with:
+### 当前已实现
 
-- execution summary
-- reservation risk panel
-- execution route preview
+- 双入口首页：快速规划入口、小红书证据优先入口
+- 三步移动端输入流程：基础信息、旅行风格、证据预览
+- `POST /plans/evidence-preview`：提交前解析预约证据
+- `POST /plans` 与 `GET /plans/{id}`：方案生成闭环
+- Supabase 持久化，未配置时可降级到本地内存模式
+- 高德地图点位渲染与天气相关准备提示
+- 结果页包含预约风险、执行路线、时间轴、地图、预算、清单、节点关系图、停车和酒店片区
+- 行程编辑台：锁定站点、移除站点、重新优化可调整路线
+- 分享页和展示页，方便录制作品集视频
+- 中文 / English 页面切换与明亮 / 暗色主题切换
 
-These appear before the map, full timeline, budget panel, checklist, and graph view.
+### 推荐演示路径
 
-### 4. City Planning Map
+1. 打开 `/`，展示双入口首页。
+2. 打开 `/plan/new?entry=quick`，展示常规三步规划流程。
+3. 打开 `/plan/new?entry=xiaohongshu`，展示预约证据预览。
+4. 打开 `/showcase?lang=zh-CN&theme=dark`，展示稳定结果页。
+5. 在结果页锁定一个预约景点，移除一个非必去点，再重新优化剩余路线。
+6. 打开 `/showcase/share`，展示适合录屏和对外分享的版本。
 
-The result includes a scaled city travel map based on real location data:
-
-- itinerary route by day
-- hotel area suggestion
-- major attraction points
-- transport links
-- relative distance awareness
-
-### 5. Reservation Reminder on Itinerary Cards
-
-Each itinerary card can show reservation-related metadata when available:
-
-- reservation required or not
-- reservation reminder text
-- reservation channel
-- ticket price or free entry note
-- source evidence
-
-V1 rule:
-
-- reservation reminders are extracted only from Xiaohongshu content when the note explicitly mentions advance reservation
-- examples include cases like Suzhou Museum being free but still requiring early reservation
-- final UI must remind users to verify official channels
-
-### 6. Self-Drive Parking and Hotel Area Suggestions
-
-When the plan is self-drive oriented and `parking_required = true`, Visitors can surface:
-
-- parking guides ranked by distance or parking price
-- walking-time expectations from the recommended lot
-- area-level hotel suggestions tuned for self-drive convenience
-
-When the plan is not self-drive oriented, parking panels stay hidden.
-
-### 7. Precise Budget Breakdown Panel
-
-Visitors includes a multi-dimensional budget panel with:
-
-- attraction tickets
-- food
-- accommodation
-- intercity transport
-- local transport
-- optional shopping / flexible budget
-
-### 8. Packing and Preparation Checklist
-
-The checklist is generated from city, season, weather, and trip style, including:
-
-- ID card / student card / required documents
-- umbrella / sunscreen / light jacket
-- power bank / chargers / camera gear
-- makeup / toiletries / medication
-
-### 9. Chinese and English Output
-
-The product is designed to support:
-
-- Chinese UI and output
-- English UI and output
-- bilingual itinerary content in future expanded versions
-
-### 10. Multi-Agent Planning
-
-The planning pipeline is designed around specialized agents, such as:
-
-- intake agent
-- city research agent
-- routing agent
-- budget agent
-- checklist agent
-- reservation hint agent
-- review agent
-
-### 11. Itinerary Graph View
-
-Generated itinerary data can be converted into a node relationship graph to visualize:
-
-- city
-- day blocks
-- attractions
-- hotel area
-- budget categories
-- reservation dependencies
-
-This helps users understand trip structure, not just a long block of text.
-
----
-
-## Product Principles
-
-- China-first, not global-first
-- execution quality over generic inspiration
-- structured output over raw AI text
-- practical details over vague recommendations
-- solo-friendly architecture and fast iteration
-
-## Tech Stack
-
-- Frontend: `Next.js`
-- Backend: `FastAPI`
-- Database / Auth / Storage: `Supabase`
-- Map: `AMap / 高德地图`
-- Version control: `Git + GitHub`
-
-## Planned Architecture
+### 技术架构
 
 ```mermaid
 flowchart LR
-    U[User] --> W[Next.js Web]
-    W --> API[FastAPI Planner API]
-    W --> MAP[AMap JS API]
-    W --> SB[Supabase]
-
-    API --> XHS[Xiaohongshu Parser]
-    API --> LLM[LLM Provider]
-    API --> GEO[AMap Web Service]
-    API --> WX[Weather Service]
-    API --> SB
+    U["Traveler"] --> W["Next.js Web"]
+    W --> API["FastAPI Planner API"]
+    W --> AJS["AMap JS API"]
+    API --> XHS["Xiaohongshu Evidence Parser"]
+    API --> EP["Reservation Evidence Preview"]
+    API --> PLAN["Planning Modules"]
+    API --> AWS["AMap Web Service"]
+    API --> SB["Supabase"]
+    PLAN --> ROUTE["Route / Timeline"]
+    PLAN --> BUDGET["Budget"]
+    PLAN --> CHECK["Checklist"]
+    PLAN --> GRAPH["Node Graph"]
 ```
 
-## Planned Result Page
+### 技术栈
 
-The V1 result page is expected to include:
+- Frontend: `Next.js`
+- Backend: `FastAPI`
+- Database / Storage: `Supabase`
+- Map / Geo / Weather: `AMap`
+- Version Control: `Git + GitHub`
 
-- execution summary
-- reservation risk panel
-- execution route preview
-- city planning map
-- day-by-day hour-level timeline
-- itinerary cards
-- reservation reminder area
-- parking guide panel
-- hotel area recommendation
-- budget breakdown panel
-- weather and outfit hints
-- packing checklist
-- graph view of trip relationships
-
-## Repository Direction
-
-This project is intended to become open source.
-
-Planned repository structure:
+### 仓库结构
 
 ```text
 visitors/
-  web/
-  api/
-  supabase/
-  docs/
+  api/          FastAPI planner API
+  web/          Next.js frontend
+  supabase/     schema, migrations, policies
+  docs/         product and portfolio docs
+  reference/    downloaded reference projects
   README.md
   PRD.md
 ```
 
-## Local Visual Preview
+### 本地运行
 
-If you want to inspect the frontend visually instead of only reading TSX in VSCode:
+#### 后端
 
-1. Run `npm run dev` inside `web/`
-2. Open `http://localhost:3000/` to verify the dual-entry homepage
-3. Open `http://localhost:3000/plan/new?entry=quick` to review the quick-entry wizard
-4. Open `http://localhost:3000/plan/new?entry=xiaohongshu` to review the evidence-first wizard
-5. Open `http://localhost:3000/showcase` to review the execution-first result layout
-6. Use `showcase` as the stable preview for reservation risks, execution route, parking panels, timeline, budget panel, checklist, and graph sections
-7. Add `NEXT_PUBLIC_AMAP_JS_KEY` in `web/.env.local` if you want the real AMap route instead of the fallback panel
+```bash
+cd api
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
 
-## Roadmap
+#### 前端
 
-### V1
+```bash
+cd web
+npm install
+npm run dev
+```
 
-- single-city domestic travel planning
-- hour-level itinerary
-- city planning map
-- reservation reminders from Xiaohongshu evidence
-- budget breakdown
-- packing checklist
-- Chinese / English support
+#### 常用页面
 
-### V1.5
+- `http://localhost:3000/`
+- `http://localhost:3000/plan/new?entry=quick`
+- `http://localhost:3000/plan/new?entry=xiaohongshu`
+- `http://localhost:3000/showcase`
+- `http://localhost:3000/showcase/share`
 
-- editable itinerary
-- shared planning with travel buddies
-- saved plans
-- better export and share flows
+### 环境变量
 
-### V2
+后端 `api/.env`
 
-- multi-city planning
-- stronger collaboration
-- post-trip content generation
-- photo-to-caption workflow for social sharing
+| Key | 说明 |
+| --- | --- |
+| `APP_ENV` | 运行环境 |
+| `SUPABASE_URL` | Supabase 项目地址 |
+| `SUPABASE_ANON_KEY` | Supabase 匿名 key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key，用于持久化 |
+| `AMAP_WEB_SERVICE_KEY` | 高德 Web Service key |
+| `XIAOHONGSHU_PARSER_MODE` | 小红书解析模式，默认 `best_effort` |
 
-## Open Source Status
+前端 `web/.env.local`
 
-Current status:
+| Key | 说明 |
+| --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | 后端 API 地址 |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 项目地址 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase 匿名 key |
+| `NEXT_PUBLIC_AMAP_JS_KEY` | 高德 JS API key |
+| `NEXT_PUBLIC_AMAP_SECURITY_JS_CODE` | 高德安全码 |
 
-- product scope and PRD are defined
-- Next.js frontend scaffold is running with a showcase result page
-- FastAPI planner API scaffold is connected to the intake flow
-- Supabase schema drafts are prepared for the next persistence step
+开源使用建议：
 
-Open source goals:
+- 不要把个人 API key 提交到 GitHub。
+- 使用者需要复制 `.env.example`，再填写自己的 Supabase 和高德 key。
+- 如果只想看界面，可以先打开 `/showcase`，不需要接完所有外部服务。
 
-- readable product structure
-- modular AI planning pipeline
-- practical China travel planning workflow
+### 作品集看点
 
-## Notes
+这个项目适合在产品经理面试中讲三层能力：
 
-- Reservation reminders in V1 are evidence-based, not official truth.
-- Users should always verify official reservation channels, prices, and policies.
-- China map and itinerary quality are more important than generic global travel support.
+- 产品判断：没有做泛旅行助手，而是聚焦国内旅行的预约、路线和执行风险。
+- 交互设计：把一次性生成改成可预览、可编辑、可分享的流程。
+- 工程落地：前端、后端、持久化、地图、预算、证据解析和展示页形成闭环。
+
+更完整的面试讲述材料见 [docs/portfolio-case.md](docs/portfolio-case.md)。
+
+### 当前状态
+
+这个仓库目前是一个可运行、可演示、可继续开源演进的 V1 原型。它还不是成熟旅游平台，但已经能展示完整的产品判断和核心链路。
+
+下一步更值得补的是：
+
+- 清理全站残留文案，保证中英文完全一致
+- 接入更真实的路线距离和预约窗口约束
+- 把当前前端行程优化演示升级成后端可解释优化器
+- 增加多人共创和旅行后内容生成
+
+## English
+
+### Positioning
+
+`Visitors` is an open-source AI travel planner for domestic China city trips. It is designed as a portfolio-grade product case, not just a UI demo.
+
+The product does not try to compete on generic travel inspiration. It focuses on a more practical job: turning scattered trip information into a plan that a traveler can trust and execute.
+
+Suzhou is only the demo preset used for walkthroughs and screen recordings. The real flow starts from any domestic China city entered by the user.
+
+### What Makes It Different
+
+#### 1. Reservation reliability first
+
+Many itinerary generators mention reservations as a vague reminder. `Visitors` treats reservation risk as a first-class planning object: which attraction needs attention, where to book, whether it is free or paid, and what evidence triggered the alert.
+
+#### 2. Execution-first routing
+
+The result page is not a long generated article. It is a command board with hour-level timeline, route summary, map points, transit duration, budget, packing checklist, parking guidance, and hotel-area suggestions.
+
+#### 3. Controllable AI planning
+
+After generation, users can lock must-go stops, remove unwanted stops, and re-optimize only the flexible route. This turns the product from "AI gives one answer" into "the user steers the answer with constraints."
+
+### Implemented Features
+
+- Dual-entry homepage for quick planning and Xiaohongshu evidence-first planning
+- Mobile-first three-step intake wizard
+- `POST /plans/evidence-preview` for reservation evidence preview
+- `POST /plans` and `GET /plans/{id}` for the generation loop
+- Supabase persistence with local in-memory fallback
+- AMap route/map rendering and weather-aware preparation hints
+- Result page with reservation risk, route summary, timeline, map, budget, checklist, graph, parking, and hotel-area panels
+- Editable itinerary controls for locking, removing, and re-optimizing route stops
+- Showcase and share pages for portfolio demos
+- Chinese / English UI switching and light / dark theme switching
+
+### Recommended Demo Flow
+
+1. Open `/` to show the dual-entry start screen.
+2. Open `/plan/new?entry=quick` to show the normal planning flow.
+3. Open `/plan/new?entry=xiaohongshu` to show evidence-first reservation parsing.
+4. Open `/showcase?lang=en&theme=dark` or `/showcase?lang=zh-CN&theme=dark` for the stable result page.
+5. Lock a reservation-sensitive stop, remove a flexible stop, and re-optimize the route.
+6. Open `/showcase/share` for a recording-friendly presentation view.
+
+### Architecture
+
+```mermaid
+flowchart LR
+    U["Traveler"] --> W["Next.js Web"]
+    W --> API["FastAPI Planner API"]
+    W --> AJS["AMap JS API"]
+    API --> XHS["Xiaohongshu Evidence Parser"]
+    API --> EP["Reservation Evidence Preview"]
+    API --> PLAN["Planning Modules"]
+    API --> AWS["AMap Web Service"]
+    API --> SB["Supabase"]
+    PLAN --> ROUTE["Route / Timeline"]
+    PLAN --> BUDGET["Budget"]
+    PLAN --> CHECK["Checklist"]
+    PLAN --> GRAPH["Node Graph"]
+```
+
+### Tech Stack
+
+- Frontend: `Next.js`
+- Backend: `FastAPI`
+- Database / Storage: `Supabase`
+- Map / Geo / Weather: `AMap`
+- Version Control: `Git + GitHub`
+
+### Local Development
+
+Run the backend:
+
+```bash
+cd api
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Run the frontend:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Useful routes:
+
+- `http://localhost:3000/`
+- `http://localhost:3000/plan/new?entry=quick`
+- `http://localhost:3000/plan/new?entry=xiaohongshu`
+- `http://localhost:3000/showcase`
+- `http://localhost:3000/showcase/share`
+
+### Environment Variables
+
+Backend `api/.env`
+
+| Key | Description |
+| --- | --- |
+| `APP_ENV` | Runtime environment |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key for persistence |
+| `AMAP_WEB_SERVICE_KEY` | AMap Web Service key |
+| `XIAOHONGSHU_PARSER_MODE` | Xiaohongshu parser mode, default `best_effort` |
+
+Frontend `web/.env.local`
+
+| Key | Description |
+| --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | Backend API base URL |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `NEXT_PUBLIC_AMAP_JS_KEY` | AMap JS API key |
+| `NEXT_PUBLIC_AMAP_SECURITY_JS_CODE` | AMap security code |
+
+Open-source usage notes:
+
+- Do not commit personal API keys to GitHub.
+- Users should copy `.env.example` and fill in their own Supabase and AMap keys.
+- If you only want to inspect the UI, open `/showcase` first.
+
+### Portfolio Angle
+
+This project is best evaluated as an AI product case:
+
+- Product judgment: it focuses on real domestic travel execution risks instead of broad inspiration.
+- Interaction design: it supports preview, editing, sharing, and presentation instead of one-shot generation.
+- Engineering delivery: frontend, backend, persistence, map context, evidence parsing, budget, and result presentation form a working loop.
+
+See [docs/portfolio-case.md](docs/portfolio-case.md) for the interview narrative.
+
+### Current Status
+
+This repository is a runnable V1 prototype for portfolio and open-source use. It is not a mature travel platform yet, but it already demonstrates the core product logic and implementation loop.
+
+High-value next steps:
+
+- Normalize remaining UI copy across Chinese and English
+- Use real route distance and reservation-window constraints
+- Upgrade the current frontend optimization demo into an explainable backend route optimizer
+- Add co-planning and post-trip content generation

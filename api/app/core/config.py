@@ -25,6 +25,5 @@ def get_settings() -> Settings:
         supabase_anon_key=os.getenv("SUPABASE_ANON_KEY", ""),
         supabase_service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", ""),
         amap_web_service_key=os.getenv("AMAP_WEB_SERVICE_KEY", ""),
-        xiaohongshu_parser_mode=os.getenv("XIAOHONGSHU_PARSER_MODE", "manual"),
+        xiaohongshu_parser_mode=os.getenv("XIAOHONGSHU_PARSER_MODE", "best_effort"),
     )
-

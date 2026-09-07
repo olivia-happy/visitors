@@ -1,5 +1,14 @@
 export type OutputLanguage = "zh-CN" | "en";
 
+export type ExchangeRateSnapshot = {
+  usdPerCny: number;
+  cnyPerUsd: number;
+  rateDate: string;
+  sourceLabel: string;
+  sourceUrl: string;
+  isFallback?: boolean;
+};
+
 export type ReservationHint = {
   poi_name: string;
   reminder_text: string;
@@ -122,6 +131,19 @@ export type PlanInput = {
   xiaohongshu_link: string | null;
   xiaohongshu_notes: string | null;
   output_language: OutputLanguage;
+};
+
+export type EvidencePreviewInput = {
+  xiaohongshu_link: string | null;
+  xiaohongshu_notes: string | null;
+  output_language: OutputLanguage;
+};
+
+export type EvidencePreview = {
+  source_url: string | null;
+  resolved_notes: string | null;
+  reservation_hints: ReservationHint[];
+  message: string;
 };
 
 export type PlanDraft = PlanInput & {

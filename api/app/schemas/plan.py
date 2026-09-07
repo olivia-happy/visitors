@@ -128,6 +128,19 @@ class PlanCreateRequest(BaseModel):
     output_language: Literal["zh-CN", "en"] = "zh-CN"
 
 
+class EvidencePreviewRequest(BaseModel):
+    xiaohongshu_link: str | None = None
+    xiaohongshu_notes: str | None = None
+    output_language: Literal["zh-CN", "en"] = "zh-CN"
+
+
+class EvidencePreviewResponse(BaseModel):
+    source_url: str | None = None
+    resolved_notes: str | None = None
+    reservation_hints: list[ReservationHint] = Field(default_factory=list)
+    message: str
+
+
 class PlanRecord(BaseModel):
     id: str
     city: str

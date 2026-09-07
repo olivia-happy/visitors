@@ -2,15 +2,28 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { buildMapSummary, groupMapPointsByDay, sortMapPointsByRoute } from "@/lib/map-helpers";
-import type { MapPoint } from "@/lib/schemas";
+import {
+  buildMapSummary,
+  groupMapPointsByDay,
+  sortMapPointsByRoute,
+} from "@/lib/map-helpers";
+import type { MapPoint, OutputLanguage } from "@/lib/schemas";
 
 type AmapPlanMapProps = {
   city: string;
+  language: OutputLanguage;
   mapPoints: MapPoint[];
 };
 
 type MapStatus = "empty" | "error" | "loading" | "missing-key" | "ready";
+
+type FallbackNode = {
+  dayIndex: number | null;
+  label: string | null;
+  sequenceNo: number | null;
+  x: number;
+  y: number;
+};
 
 type AMapNamespace = {
   Map: new (
@@ -52,7 +65,97 @@ declare global {
 const AMAP_SCRIPT_ID = "visitors-amap-js-sdk";
 let amapPromise: Promise<AMapNamespace> | null = null;
 
-export function AmapPlanMap({ city, mapPoints }: AmapPlanMapProps) {
+const copyByLanguage = {
+  "zh-CN": {
+    heroKicker: "高德路线",
+    heroTitle: "{city} 路线总览",
+    summary: "路线摘要",
+    stops: "节点数",
+    days: "天数",
+    firstStop: "第一站",
+    lastStop: "最后一站",
+    notGenerated: "待生成",
+    dayRoute: "分日路线",
+    dayLabel: "第 {day} 天",
+    emptyDayRoute: "生成行程后，这里会按天展示路线顺序。",
+    status: {
+      empty: {
+        badge: "暂无路线",
+        title: "地图正在等待路线点位。",
+        description: "等到行程带上坐标后，这里会渲染城市路线和停留顺序。",
+      },
+      "missing-key": {
+        badge: "静态预览",
+        title: "还没有配置高德地图 Key。",
+        description:
+          "补上地图密钥后，这里就会切成实时地图，而不是当前的静态预览面板。",
+      },
+      error: {
+        badge: "加载失败",
+        title: "高德地图加载失败。",
+        description:
+          "请检查 JS Key、安全密钥和浏览器控制台。下面的路线摘要仍然会继续使用已生成的行程数据。",
+      },
+      loading: {
+        badge: "加载中",
+        title: "正在加载城市路线地图。",
+        description:
+          "行程点位已经准备好，前端正在加载高德 JS SDK 并绘制路线。",
+      },
+      ready: {
+        badge: "实时地图",
+        title: "高德路线已准备好。",
+        description: "当前路线正在使用已生成的节点坐标。",
+      },
+    },
+  },
+  en: {
+    heroKicker: "AMap route",
+    heroTitle: "{city} route overview",
+    summary: "Route summary",
+    stops: "Stops",
+    days: "Days",
+    firstStop: "First stop",
+    lastStop: "Last stop",
+    notGenerated: "Not generated",
+    dayRoute: "Day route",
+    dayLabel: "Day {day}",
+    emptyDayRoute: "Generate an itinerary to render the route day by day.",
+    status: {
+      empty: {
+        badge: "No route",
+        title: "The map is waiting for route points.",
+        description:
+          "Once the itinerary includes coordinates, this panel will render the city route and stop order.",
+      },
+      "missing-key": {
+        badge: "Fallback",
+        title: "The AMap key is missing.",
+        description:
+          "Add NEXT_PUBLIC_AMAP_JS_KEY to web/.env.local to render the live map instead of the fallback panel.",
+      },
+      error: {
+        badge: "Retry needed",
+        title: "AMap failed to load.",
+        description:
+          "Check the JS key, security code, and browser console. The route summary below still uses the generated plan data.",
+      },
+      loading: {
+        badge: "Loading",
+        title: "Loading the city route map.",
+        description:
+          "The itinerary points are ready. The client is now loading the AMap JS SDK and drawing the route.",
+      },
+      ready: {
+        badge: "Live map",
+        title: "The AMap route is ready.",
+        description: "The route is using the generated stop coordinates.",
+      },
+    },
+  },
+} as const;
+
+export function AmapPlanMap({ city, language, mapPoints }: AmapPlanMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<{ destroy: () => void } | null>(null);
   const [loadState, setLoadState] = useState<{
@@ -63,6 +166,7 @@ export function AmapPlanMap({ city, mapPoints }: AmapPlanMapProps) {
     signature: null,
   });
 
+  const copy = copyByLanguage[language];
   const amapKey = process.env.NEXT_PUBLIC_AMAP_JS_KEY ?? "";
   const securityJsCode = process.env.NEXT_PUBLIC_AMAP_SECURITY_JS_CODE ?? "";
   const orderedPoints = sortMapPointsByRoute(mapPoints);
@@ -102,7 +206,7 @@ export function AmapPlanMap({ city, mapPoints }: AmapPlanMapProps) {
         }
 
         const nextOrderedPoints = sortMapPointsByRoute(mapPoints);
-        const nextSummary = buildMapSummary(mapPoints);
+        const nextSummary = buildMapSummary(nextOrderedPoints);
 
         if (mapRef.current) {
           mapRef.current.destroy();
@@ -167,35 +271,141 @@ export function AmapPlanMap({ city, mapPoints }: AmapPlanMapProps) {
     };
   }, [amapKey, mapPoints, routeSignature, securityJsCode]);
 
-  const statusCopy = getStatusCopy(status);
+  const statusCopy = copy.status[status];
+  const previewPoints = orderedPoints.slice(0, 4);
+  const fallbackNodes = buildFallbackNodes(previewPoints);
 
   return (
     <div className="grid gap-4">
-      <div className="overflow-hidden rounded-[1.5rem] border border-line/60 bg-[#eef3e8]">
-        <div className="flex items-center justify-between border-b border-line/50 bg-white/70 px-4 py-3">
+      <div className="amap-route-card">
+        <div className="amap-route-head">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-              AMap Route
-            </p>
-            <h3 className="mt-1 text-sm font-semibold text-foreground">
-              {city} route overview
+            <p className="planner-kicker">{copy.heroKicker}</p>
+            <h3 className="mt-1 text-[0.88rem] font-semibold text-foreground">
+              {copy.heroTitle.replace("{city}", city)}
             </h3>
           </div>
-          <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent">
+          <span className="result-chip-soft text-[0.62rem] font-semibold">
             {statusCopy.badge}
           </span>
         </div>
-        <div className="relative min-h-80 bg-[linear-gradient(135deg,_#dae7d4,_#f5eedf)]">
-          <div ref={containerRef} className="h-80 w-full" />
+        <div className="amap-route-viewport" data-status={status}>
+          <div ref={containerRef} className="amap-route-canvas" />
           {status !== "ready" ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#eef3e8]/85 p-6 text-center">
-              <div className="max-w-md">
-                <p className="text-sm font-semibold text-foreground">
-                  {statusCopy.title}
-                </p>
-                <p className="mt-2 text-sm leading-7 text-muted">
-                  {statusCopy.description}
-                </p>
+            <div className="amap-route-fallback" data-status={status}>
+              <svg
+                aria-hidden="true"
+                className="amap-route-schematic"
+                preserveAspectRatio="none"
+                viewBox="0 0 100 100"
+              >
+                <defs>
+                  <linearGradient
+                    id="amap-route-gradient"
+                    x1="0%"
+                    x2="100%"
+                    y1="0%"
+                    y2="100%"
+                  >
+                    <stop offset="0%" stopColor="rgba(31, 53, 45, 0.32)" />
+                    <stop offset="52%" stopColor="rgba(143, 104, 73, 0.52)" />
+                    <stop offset="100%" stopColor="rgba(31, 53, 45, 0.2)" />
+                  </linearGradient>
+                </defs>
+                <path
+                  className="amap-route-schematic-path"
+                  d={buildFallbackPath(fallbackNodes)}
+                />
+                {fallbackNodes.map((node, index) => (
+                  <g key={`fallback-node-${node.x}-${node.y}-${index}`}>
+                    <circle
+                      className="amap-route-schematic-node-ring"
+                      cx={node.x}
+                      cy={node.y}
+                      r="4.5"
+                    />
+                    <circle
+                      className="amap-route-schematic-node-core"
+                      cx={node.x}
+                      cy={node.y}
+                      r="1.85"
+                    />
+                  </g>
+                ))}
+              </svg>
+
+              <div aria-hidden="true" className="amap-route-grid-lines" />
+
+              <div className="amap-route-fallback-shell">
+                <section className="amap-route-fallback-note">
+                  <div className="amap-route-fallback-head">
+                    <span className="amap-route-fallback-badge">
+                      {statusCopy.badge}
+                    </span>
+                    {status === "missing-key" ? (
+                      <code className="amap-route-fallback-code">
+                        NEXT_PUBLIC_AMAP_JS_KEY
+                      </code>
+                    ) : null}
+                  </div>
+
+                  <div className="grid gap-2">
+                    <h4 className="amap-route-fallback-title">
+                      {statusCopy.title}
+                    </h4>
+                    <p className="amap-route-fallback-copy">
+                      {statusCopy.description}
+                    </p>
+                  </div>
+                </section>
+
+                <aside className="amap-route-fallback-dossier">
+                  <div className="amap-route-fallback-metrics">
+                    <FallbackMetric
+                      label={copy.stops}
+                      value={String(summary.stopCount || 0).padStart(2, "0")}
+                    />
+                    <FallbackMetric
+                      label={copy.days}
+                      value={String(summary.dayCount || 0).padStart(2, "0")}
+                    />
+                  </div>
+
+                  <div className="amap-route-fallback-tape">
+                    <p className="amap-route-fallback-tape-kicker">
+                      {copy.dayRoute}
+                    </p>
+                    {previewPoints.length ? (
+                      <div className="amap-route-fallback-stop-list">
+                        {previewPoints.map((point) => (
+                          <div
+                            key={`fallback-stop-${point.sequence_no}-${point.name}`}
+                            className="amap-route-fallback-stop"
+                          >
+                            <span className="amap-route-fallback-stop-index">
+                              {String(point.sequence_no).padStart(2, "0")}
+                            </span>
+                            <div className="grid gap-1">
+                              <p className="amap-route-fallback-stop-title">
+                                {point.name}
+                              </p>
+                              <p className="amap-route-fallback-stop-meta">
+                                {copy.dayLabel.replace(
+                                  "{day}",
+                                  String(point.day_index),
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="amap-route-fallback-empty">
+                        {copy.emptyDayRoute}
+                      </p>
+                    )}
+                  </div>
+                </aside>
               </div>
             </div>
           ) : null}
@@ -203,43 +413,39 @@ export function AmapPlanMap({ city, mapPoints }: AmapPlanMapProps) {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="rounded-[1.5rem] border border-line/70 bg-white/75 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-            Route Summary
-          </p>
+        <section className="result-surface p-4">
+          <p className="result-panel-kicker">{copy.summary}</p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <MetricCard label="Stops" value={String(summary.stopCount)} />
-            <MetricCard label="Days" value={String(summary.dayCount)} />
+            <MetricCard label={copy.stops} value={String(summary.stopCount)} />
+            <MetricCard label={copy.days} value={String(summary.dayCount)} />
             <MetricCard
-              label="First stop"
-              value={summary.firstStopName ?? "Not generated"}
+              label={copy.firstStop}
+              value={summary.firstStopName ?? copy.notGenerated}
             />
             <MetricCard
-              label="Last stop"
-              value={summary.lastStopName ?? "Not generated"}
+              label={copy.lastStop}
+              value={summary.lastStopName ?? copy.notGenerated}
             />
           </div>
         </section>
 
-        <section className="rounded-[1.5rem] border border-line/70 bg-white/75 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-            Day Route
-          </p>
+        <section className="result-surface p-4">
+          <p className="result-panel-kicker">{copy.dayRoute}</p>
           <div className="mt-3 grid gap-3">
             {dayGroups.length ? (
               dayGroups.map((group) => (
                 <article
                   key={group.dayIndex}
-                  className="rounded-2xl border border-line/60 bg-[#fffdf7] p-3"
+                  className="rounded-[0.98rem] border border-line/60 bg-[#fffdf7] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
                 >
-                  <p className="text-sm font-semibold text-accent">
-                    Day {group.dayIndex}
+                  <p className="text-[0.78rem] font-semibold text-accent">
+                    {copy.dayLabel.replace("{day}", String(group.dayIndex))}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {group.points.map((point) => (
                       <span
                         key={`${group.dayIndex}-${point.sequence_no}-${point.name}`}
-                        className="rounded-full border border-line bg-white px-3 py-2 text-xs text-foreground"
+                        className="rounded-full border border-line bg-white px-3 py-1.5 text-[0.68rem] text-foreground"
                       >
                         #{point.sequence_no} {point.name}
                       </span>
@@ -248,9 +454,7 @@ export function AmapPlanMap({ city, mapPoints }: AmapPlanMapProps) {
                 </article>
               ))
             ) : (
-              <p className="text-sm leading-7 text-muted">
-                Generate an itinerary to render the route by day.
-              </p>
+              <p className="text-sm leading-7 text-muted">{copy.emptyDayRoute}</p>
             )}
           </div>
         </section>
@@ -261,54 +465,57 @@ export function AmapPlanMap({ city, mapPoints }: AmapPlanMapProps) {
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-2xl border border-line/60 bg-[#fffdf7] px-4 py-3">
-      <p className="text-xs uppercase tracking-[0.16em] text-muted">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-foreground">{value}</p>
+    <article className="rounded-[0.98rem] border border-line/60 bg-[#fffdf7] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.52)]">
+      <p className="text-[0.62rem] uppercase tracking-[0.18em] text-muted">{label}</p>
+      <p className="mt-2 text-[0.78rem] font-semibold text-foreground">{value}</p>
     </article>
   );
 }
 
-function getStatusCopy(status: MapStatus): {
-  badge: string;
-  description: string;
-  title: string;
-} {
-  switch (status) {
-    case "empty":
-      return {
-        badge: "No route",
-        title: "Map is waiting for route points.",
-        description:
-          "Once the itinerary has coordinates, this panel will render the city route and stop sequence.",
-      };
-    case "missing-key":
-      return {
-        badge: "Fallback",
-        title: "AMap key is missing.",
-        description:
-          "Add NEXT_PUBLIC_AMAP_JS_KEY to web/.env.local to render the live map instead of the fallback panel.",
-      };
-    case "error":
-      return {
-        badge: "Retry needed",
-        title: "AMap failed to load.",
-        description:
-          "Check the JS key, security code, and browser console. The route summary below still uses the generated plan data.",
-      };
-    case "loading":
-      return {
-        badge: "Loading",
-        title: "Loading the city route map.",
-        description:
-          "The itinerary points are ready. The client is now loading the AMap JS SDK and drawing the route.",
-      };
-    case "ready":
-      return {
-        badge: "Live map",
-        title: "AMap route is ready.",
-        description: "The route is using the generated stop coordinates.",
-      };
+function FallbackMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <article className="amap-route-fallback-metric">
+      <p className="amap-route-fallback-metric-label">{label}</p>
+      <p className="amap-route-fallback-metric-value">{value}</p>
+    </article>
+  );
+}
+
+function buildFallbackNodes(points: MapPoint[]): FallbackNode[] {
+  const basePositions = [
+    { x: 14, y: 78 },
+    { x: 31, y: 59 },
+    { x: 48, y: 40 },
+    { x: 72, y: 56 },
+    { x: 88, y: 24 },
+  ];
+  const count = Math.max(points.length, 4);
+
+  return basePositions.slice(0, count).map((position, index) => ({
+    x: position.x,
+    y: position.y,
+    label: points[index]?.name ?? null,
+    sequenceNo: points[index]?.sequence_no ?? null,
+    dayIndex: points[index]?.day_index ?? null,
+  }));
+}
+
+function buildFallbackPath(nodes: FallbackNode[]) {
+  if (!nodes.length) {
+    return "";
   }
+
+  return nodes
+    .map((node, index) => {
+      if (index === 0) {
+        return `M ${node.x} ${node.y}`;
+      }
+
+      const previous = nodes[index - 1];
+      const controlX = (previous.x + node.x) / 2;
+      return `Q ${controlX} ${previous.y}, ${node.x} ${node.y}`;
+    })
+    .join(" ");
 }
 
 async function loadAmap(

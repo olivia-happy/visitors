@@ -30,5 +30,10 @@ api/**/*.pyc
 # Logs
 *.log
 
+# Local screenshots and implementation scratch notes
+web/.tmp-*.png
+docs/assets/*.png
+docs/plans/
+
 # Local reference clones
 reference/

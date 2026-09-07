@@ -1,4 +1,9 @@
-import type { PlanDraft, PlanInput } from "./schemas";
+import type {
+  EvidencePreview,
+  EvidencePreviewInput,
+  PlanDraft,
+  PlanInput,
+} from "./schemas";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
@@ -29,6 +34,24 @@ export async function createPlan(input: PlanInput): Promise<PlanDraft> {
   }
 
   return (await response.json()) as PlanDraft;
+}
+
+export async function previewEvidence(
+  input: EvidencePreviewInput,
+): Promise<EvidencePreview> {
+  const response = await fetch(`${API_BASE_URL}/plans/evidence-preview`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to preview reservation evidence.");
+  }
+
+  return (await response.json()) as EvidencePreview;
 }
 
 export async function fetchPlan(planId: string): Promise<PlanDraft | null> {

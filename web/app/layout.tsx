@@ -1,33 +1,39 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
+import { Suspense } from "react";
+
+import { ViewStateDocumentSync } from "@/components/app/view-state-document-sync";
+import {
+  DEFAULT_VIEW_LANGUAGE,
+  normalizeViewLanguage,
+} from "@/lib/view-state";
+
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Visitors",
-  description: "China-first AI travel planner for detailed city trips.",
+  title: "访行计划",
+  description: "面向国内城市旅行的精细化 AI 行程规划工具。",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const requestHeaders = await headers();
+  const documentLanguage = normalizeViewLanguage(
+    requestHeaders.get("x-visitors-lang"),
+    DEFAULT_VIEW_LANGUAGE,
+  );
+
   return (
-    <html
-      lang="zh-CN"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang={documentLanguage} className="h-full antialiased">
+      <body className="min-h-full flex flex-col">
+        <Suspense fallback={null}>
+          <ViewStateDocumentSync />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }
