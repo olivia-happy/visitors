@@ -109,9 +109,12 @@ visitors/
   web/          Next.js frontend
   supabase/     schema, migrations, policies
   docs/         product and portfolio docs
+    VISITORS_PRD.md       主产品需求文档（中文）
+    VISITORS_PRD.en.md    英文版 PRD
+    portfolio-case.md     面试讲述材料
+    archive/              历史草案
   reference/    downloaded reference projects
   README.md
-  PRD.md
 ```
 
 ### 本地运行
@@ -179,6 +182,7 @@ npm run dev
 - 交互设计：把一次性生成改成可预览、可编辑、可分享的流程。
 - 工程落地：前端、后端、持久化、地图、预算、证据解析和展示页形成闭环。
 
+产品文档见 [docs/VISITORS_PRD.md](docs/VISITORS_PRD.md)（中文主文档）与 [docs/VISITORS_PRD.en.md](docs/VISITORS_PRD.en.md)。
 更完整的面试讲述材料见 [docs/portfolio-case.md](docs/portfolio-case.md)。
 
 ### 当前状态

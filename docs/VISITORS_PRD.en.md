@@ -1,8 +1,17 @@
-# Visitors PRD
+# Visitors PRD (English)
 
-> Status: Draft v2  
-> Date: 2026-06-22  
-> Product phase: V1 AI tool, later evolving into a full product
+> Status: Draft v2 — English mirror
+> Date: 2026-06-22 (original draft) · 2026-09-16 (moved under `docs/`, cross-linked)
+> Product phase: V1 prototype, later evolving into a full product
+>
+> 中文主文档：[`VISITORS_PRD.md`](VISITORS_PRD.md) · Companion: [`portfolio-case.md`](portfolio-case.md)
+
+> **Note on scope.** This is the original English draft, kept for English-language use.
+> The Chinese PRD ([`VISITORS_PRD.md`](VISITORS_PRD.md)) is the primary document and additionally
+> reflects what shipped after this draft: dual-entry intake (quick / Xiaohongshu evidence-first),
+> pre-submit `POST /plans/evidence-preview`, parking guidance, the itinerary editing bench
+> (lock / remove / re-optimize), showcase & share pages, and bilingual + theme switching.
+> Items listed below as "Later Versions" should be read against the Chinese PRD's status column.
 
 ---
 
