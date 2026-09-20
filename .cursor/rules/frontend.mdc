@@ -1,0 +1,36 @@
+---
+description: "修改前端 Next.js 代码（web/）时的约定"
+globs: "web/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# 前端（Next.js App Router）约定
+
+## 结构
+
+- `web/app/` —— 页面：`/`（双入口首页）、`/plan/new`、`/plan/[planId]`、`/showcase`、`/showcase/share`
+- `web/components/` —— 按域分：`app` / `intake` / `map` / `result`
+- `web/lib/` —— 工具与 API 调用（`*.test.mjs` 用 `node --test` 跑）
+- `web/proxy.ts` —— 代理配置
+
+## 硬性要求
+
+- `npm run lint` 必须零错误；改完跑一次 `npm run build`（类型错误只在 build 暴露）
+- **新增或修改任何用户可见文案，必须同时补中文与英文两份**，并检查明暗主题下的可读性
+- **不要展示未评测的数字**（预约准确率、优化提升幅度等）
+- 结果页是「出行指挥板」不是长文：新增内容要判断它属于哪个面板（时间轴 / 地图 / 预算 / 清单 / 停车 / 酒店片区）
+- 行程编辑台的锁定 / 移除 / 重优化交互是核心，改动要保持「只对弹性路线重优化」的语义
+
+## 常用命令
+
+```powershell
+npm run dev      # next dev
+npm run lint     # eslint
+npm run build    # next build
+npm run test     # node --test lib/**/*.test.mjs
+```
+
+## 常见坑
+
+- 演示预设是苏州，但**苏州不是产品边界**——新增逻辑不要硬编码苏州。
+- `/showcase` 是稳定展示页，不依赖后端完整启动；录屏与对外演示走这条路径。

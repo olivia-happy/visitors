@@ -1,0 +1,36 @@
+---
+description: "修改后端 FastAPI 代码（api/）时的约定"
+globs: "api/**/*.py"
+alwaysApply: false
+---
+
+# 后端（FastAPI + Python）约定
+
+## 分层
+
+- `api/app/services/<域>.py` —— 业务逻辑，一域一文件
+- `api/app/routers/` —— 路由
+- `api/app/schemas/` —— 请求/响应契约
+- `api/app/core/` —— 配置
+- `api/app/tests/` —— pytest，`pytest.ini` 已配 `pythonpath = .` 与 `testpaths = app/tests`
+
+## 硬性要求
+
+- 新增服务逻辑**必须配测试**，放 `api/app/tests/test_<域>.py`（当前 23 个用例）
+- 涉及外部服务的代码必须**可 mock**（高德 / 小红书 / Supabase 都不许在测试里真连）
+- 解析类逻辑保持 best-effort 语义：失败要能降级，不能因为一个解析失败让整个规划崩掉
+- 涉及 Supabase 的读写，必须同时保证**内存降级路径可用**
+
+## 测试
+
+```powershell
+cd api
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+在 `api/` 目录下运行（`pytest.ini` 的 `pythonpath` 依赖这一点）。从仓库根跑会导入失败。
+
+## 常见坑
+
+- 高德 JS API 需要**两个** key（`NEXT_PUBLIC_AMAP_JS_KEY` + 安全码），少一个点位不渲染。
+- 涉及外部调用失败时不要抛出去中断流程，按 best-effort 处理并让其他模块照常出结果。

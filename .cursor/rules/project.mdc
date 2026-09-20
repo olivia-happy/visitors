@@ -1,0 +1,46 @@
+---
+description: "Visitors 项目总则：命令、架构红线、不宣称边界与提交约定"
+alwaysApply: true
+---
+
+# Visitors 项目规则
+
+面向中国境内城市旅行的执行型智能行程规划器。产品背景见 `docs/VISITORS_PRD.md`，
+人类接手见 `HANDOFF.md`，跨工具通用指令见 `AGENTS.md`。
+
+## 环境与命令
+
+Python 3.11+、Node.js，后端依赖在 `api/.venv`。
+
+```powershell
+cd api
+.\.venv\Scripts\python.exe -m pytest -q      # 23 个用例
+
+cd web
+npm run lint
+npm run build
+```
+
+CI 跑 `web`（npm ci + lint）与 `api`（pytest）两套。提交前本地都跑通，不靠 CI 兜底。
+
+## 架构红线
+
+- **不宣称预约准确率**：小红书解析是 best-effort，无标注集评测。任何文案不得写「准确率 X%」。
+- **路线优化目前是前端演示级**：后端无可解释优化器，升级方向是把它搬到后端。
+  不要把现状描述成"已实现可解释优化器"。
+- **持久化必须可降级**：Supabase 未配置时走本地内存，核心链路不得硬依赖任何外部 key。
+- **预约证据必须在输入阶段前置**（`POST /plans/evidence-preview`），不是结果页的一句提醒。
+- **行程必须可编辑**：锁定 / 移除 / 只对弹性路线重优化，不要简化成一次性生成。
+- **中英文与明暗主题是既有需求**：新增文案必须同时补中英两份。
+
+## 数据边界
+
+只读公开可访问的小红书内容，不绕过登录 / 验证码 / 反爬。高德 key 有个人免费配额，
+不要在循环里反复调用。不要把个人 API key 提交到仓库。
+
+## 不要做的事
+
+- 不要编造预约准确率、覆盖率等未评测的数字
+- 不要让核心链路依赖外部 key 才能跑通
+- 不要把 `reference/` 里的第三方项目当成本仓库产出
+- 不要提交 `.env`、`api/.venv/`、`web/node_modules/`、`web/.next/`
